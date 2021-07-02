@@ -45,7 +45,6 @@ def get_homeworks(current_timestamp):
     headers = {"Authorization": f"OAuth {PRAKTIKUM_TOKEN}"}
     payload = {"from_date": current_timestamp}
     homework_statuses = requests.get(url, headers=headers, params=payload)
-    print(homework_statuses.json())
     return homework_statuses.json()
 
 
