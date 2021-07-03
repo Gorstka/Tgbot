@@ -7,7 +7,12 @@ import telegram
 
 class MockResponseGET:
     def __init__(
-        self, url, params=None, random_sid=None, current_timestamp=None, **kwargs
+        self,
+        url,
+        params=None,
+        random_sid=None,
+        current_timestamp=None,
+        **kwargs,
     ):
         assert url.startswith(
             "https://praktikum.yandex.ru/api/user_api/homework_statuses"
@@ -46,7 +51,9 @@ class MockResponseGET:
 
 class MockTelegramBot:
     def __init__(self, token=None, random_sid=None, **kwargs):
-        assert token is not None, "Проверьте, что вы передали токен бота Telegram"
+        assert (
+            token is not None
+        ), "Проверьте, что вы передали токен бота Telegram"
         self.random_sid = random_sid
 
     def send_message(self, chat_id=None, text=None, **kwargs):

@@ -27,16 +27,14 @@ logging.basicConfig(
 
 def parse_homework_status(homework):
     homework_name = homework["homework_name"]
+    homework_status = homework["status"]
     verdict = None
-    try:
-        if homework["status"] == "reviewing":
-            verdict = "Работа взята на ревью."
-        elif homework["status"] == "rejected":
-            verdict = "К сожалению, в работе нашлись ошибки."
-        else:
-            verdict = "Ревьюеру всё понравилось, работа зачтена!"
-    except Exception as error:
-        logging.error(error, exc_info=True)
+    if homework_status == "reviewing":
+        verdict = "Работа взята на ревью."
+    elif homework_status == "rejected":
+        verdict = "К сожалению, в работе нашлись ошибки."
+    else:
+        verdict = "Ревьюеру всё понравилось, работа зачтена!"
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
@@ -53,17 +51,20 @@ def send_message(message):
 
 
 def main():
-    current_timestamp = int(time.time())
 
     while True:
         try:
-            homeworks = get_homeworks(current_timestamp)
-            message = parse_homework_status(homeworks)
-            send_message(message)
-            time.sleep(5 * 60)
+            homeworks = get_homeworks(0)
+            if homeworks["homeworks"]:
+                last_homework = homeworks["homeworks"][0]
+                message = parse_homework_status(last_homework)
+                send_message(message)
+                time.sleep(480 * 60)
 
-        except Exception as e:
-            print(f"Бот упал с ошибкой: {e}")
+        except Exception as error:
+            print(f"Бот упал с ошибкой: {error}")
+            logging.error(error, exc_info=True)
+            send_message(str(error))
             time.sleep(5)
 
 
