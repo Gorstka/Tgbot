@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import time
@@ -12,7 +13,7 @@ load_dotenv()
 PRAKTIKUM_TOKEN = os.getenv("PRAKTIKUM_TOKEN")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-
+url = "https://praktikum.yandex.ru/api/user_api/homework_statuses/"
 
 bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
@@ -25,24 +26,39 @@ logging.basicConfig(
 )
 
 
+class TGBotException(Exception):
+    pass
+
+
 def parse_homework_status(homework):
-    homework_name = homework["homework_name"]
-    homework_status = homework["status"]
-    verdict = None
-    if homework_status == "reviewing":
-        verdict = "Работа взята на ревью."
-    elif homework_status == "rejected":
-        verdict = "К сожалению, в работе нашлись ошибки."
+
+    if homework["homework_name"] and homework["status"]:
+        homework_name = homework["homework_name"]
+        homework_status = homework["status"]
+        if homework_status == "reviewing":
+            verdict = "Работа взята на ревью."
+        elif homework_status == "rejected":
+            verdict = "К сожалению, в работе нашлись ошибки."
+        elif homework_status == "approved":
+            verdict = "Ревьюеру всё понравилось, работа зачтена!"
+        else:
+            raise TGBotException("Работа содержит иной status")
     else:
-        verdict = "Ревьюеру всё понравилось, работа зачтена!"
+        raise TGBotException(
+            "Сообщение не содержит обязательные поля - status и homework_name"
+        )
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
 def get_homeworks(current_timestamp):
-    url = "https://praktikum.yandex.ru/api/user_api/homework_statuses/"
     headers = {"Authorization": f"OAuth {PRAKTIKUM_TOKEN}"}
     payload = {"from_date": current_timestamp}
-    homework_statuses = requests.get(url, headers=headers, params=payload)
+    try:
+        homework_statuses = requests.get(url, headers=headers, params=payload)
+    except requests.exceptions.RequestException as err:
+        raise TGBotException(err)
+    except requests.exceptions.HTTPError as e:
+        raise TGBotException(e)
     return homework_statuses.json()
 
 
@@ -51,18 +67,21 @@ def send_message(message):
 
 
 def main():
+    current_timestamp = int(
+        time.time() - datetime.timedelta(days=20).total_seconds()
+    )
 
     while True:
         try:
-            homeworks = get_homeworks(0)
+            homeworks = get_homeworks(current_timestamp)
+            print(homeworks)
             if homeworks["homeworks"]:
                 last_homework = homeworks["homeworks"][0]
                 message = parse_homework_status(last_homework)
                 send_message(message)
-                time.sleep(480 * 60)
+            time.sleep(5 * 60)
 
         except Exception as error:
-            print(f"Бот упал с ошибкой: {error}")
             logging.error(error, exc_info=True)
             send_message(str(error))
             time.sleep(5)
