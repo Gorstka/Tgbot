@@ -68,7 +68,7 @@ def send_message(message):
 
 def main():
     current_timestamp = int(
-        time.time() - datetime.timedelta(days=20).total_seconds()
+        time.time() - datetime.timedelta(days=7).total_seconds()
     )
 
     while True:
