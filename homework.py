@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 import time
+from http import HTTPStatus
 
 import requests
 import telegram
@@ -45,7 +46,7 @@ def parse_homework_status(homework):
             raise TGBotException("Работа содержит иной status")
     else:
         raise TGBotException(
-            "Сообщение не содержит обязательные поля - status и homework_name"
+            "Работа не содержит обязательные поля - status и homework_name"
         )
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
@@ -56,9 +57,12 @@ def get_homeworks(current_timestamp):
     try:
         homework_statuses = requests.get(url, headers=headers, params=payload)
     except requests.exceptions.RequestException as err:
-        raise TGBotException(err)
-    except requests.exceptions.HTTPError as e:
-        raise TGBotException(e)
+        raise TGBotException(f"Не удалось выполнить запрос к серверу - {err}")
+    if homework_statuses.status_code != HTTPStatus.OK:
+        raise TGBotException(
+            "Сервер вернул ответ с некорректным статусом -"
+            f"{homework_statuses.status_code}"
+        )
     return homework_statuses.json()
 
 
@@ -68,12 +72,13 @@ def send_message(message):
 
 def main():
     current_timestamp = int(
-        time.time() - datetime.timedelta(days=20).total_seconds()
+        time.time() - datetime.timedelta(days=7).total_seconds()
     )
 
     while True:
         try:
             homeworks = get_homeworks(current_timestamp)
+
             if homeworks["homeworks"]:
                 last_homework = homeworks["homeworks"][0]
                 message = parse_homework_status(last_homework)
