@@ -68,13 +68,12 @@ def send_message(message):
 
 def main():
     current_timestamp = int(
-        time.time() - datetime.timedelta(days=7).total_seconds()
+        time.time() - datetime.timedelta(days=20).total_seconds()
     )
 
     while True:
         try:
             homeworks = get_homeworks(current_timestamp)
-            print(homeworks)
             if homeworks["homeworks"]:
                 last_homework = homeworks["homeworks"][0]
                 message = parse_homework_status(last_homework)
