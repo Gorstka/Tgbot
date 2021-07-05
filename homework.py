@@ -1,4 +1,3 @@
-import datetime
 import logging
 import os
 import time
@@ -33,21 +32,20 @@ class TGBotException(Exception):
 
 def parse_homework_status(homework):
 
-    if homework["homework_name"] and homework["status"]:
-        homework_name = homework["homework_name"]
-        homework_status = homework["status"]
-        if homework_status == "reviewing":
-            verdict = "Работа взята на ревью."
-        elif homework_status == "rejected":
-            verdict = "К сожалению, в работе нашлись ошибки."
-        elif homework_status == "approved":
-            verdict = "Ревьюеру всё понравилось, работа зачтена!"
-        else:
-            raise TGBotException("Работа содержит иной status")
-    else:
+    if "homework_name" not in homework or "status" not in homework:
         raise TGBotException(
             "Работа не содержит обязательные поля - status и homework_name"
         )
+    homework_name = homework["homework_name"]
+    homework_status = homework["status"]
+    if homework_status == "reviewing":
+        verdict = "Работа взята на ревью."
+    elif homework_status == "rejected":
+        verdict = "К сожалению, в работе нашлись ошибки."
+    elif homework_status == "approved":
+        verdict = "Ревьюеру всё понравилось, работа зачтена!"
+    else:
+        raise TGBotException("Работа содержит иной status")
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
@@ -71,14 +69,12 @@ def send_message(message):
 
 
 def main():
-    current_timestamp = int(
-        time.time() - datetime.timedelta(days=7).total_seconds()
-    )
+    current_timestamp = int(time.time())
 
     while True:
         try:
             homeworks = get_homeworks(current_timestamp)
-
+            print(homeworks)
             if homeworks["homeworks"]:
                 last_homework = homeworks["homeworks"][0]
                 message = parse_homework_status(last_homework)
