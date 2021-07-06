@@ -74,11 +74,11 @@ def main():
     while True:
         try:
             homeworks = get_homeworks(current_timestamp)
-            print(homeworks)
             if homeworks["homeworks"]:
                 last_homework = homeworks["homeworks"][0]
                 message = parse_homework_status(last_homework)
                 send_message(message)
+                current_timestamp = int(time.time())
             time.sleep(5 * 60)
 
         except Exception as error:
