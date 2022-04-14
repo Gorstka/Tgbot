@@ -64,8 +64,8 @@ def get_homeworks(current_timestamp):
     return homework_statuses.json()
 
 
-def send_message():
-    return bot.send_message(CHAT_ID, message)
+def send_message(message):
+    return bot.send_message(, message)
 
 
 def main():
